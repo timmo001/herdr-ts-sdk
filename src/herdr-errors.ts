@@ -166,7 +166,7 @@ export class HerdrInvalidResponse extends Schema.TaggedError<HerdrInvalidRespons
 }
 
 /**
- * Server protocol version differs from protocol 21 supported by this SDK.
+ * Server protocol version differs from protocol 22 supported by this SDK.
  *
  * @category errors
  * @since 0.8.2
@@ -175,13 +175,13 @@ export class HerdrUnsupportedProtocol extends Schema.TaggedError<HerdrUnsupporte
   "HerdrUnsupportedProtocol",
   {
     actualProtocol: Schema.Finite.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
-    supportedProtocol: Schema.Literal(21),
+    supportedProtocol: Schema.Literal(22),
     requestId: Schema.String,
     message: Schema.String,
   },
 ) {
   /** Creates a protocol compatibility failure from the ping handshake. */
-  constructor(actualProtocol: number, supportedProtocol: 21, requestId: string) {
+  constructor(actualProtocol: number, supportedProtocol: 22, requestId: string) {
     super({
       actualProtocol,
       supportedProtocol,
