@@ -17,7 +17,7 @@ import {
 import { HerdrConfigurationError } from "./herdr-errors.ts";
 
 const DEFAULT_REQUEST_TIMEOUT = Duration.seconds(5);
-const SUPPORTED_HERDR_PROTOCOL = 21 as const;
+const SUPPORTED_HERDR_PROTOCOL = 22 as const;
 
 /**
  * Finite, non-negative deadline for ordinary Herdr transport requests.

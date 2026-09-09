@@ -32,7 +32,7 @@ import {
 import type { ErrorResponse } from "./generated/wire-error-response.ts";
 import herdrApiSchema from "../schema/herdr-api.schema.json" with { type: "json" };
 import type { ResponseResult } from "./generated/wire-success-response.ts";
-import { parseHerdrWireResponse } from "./herdr-wire-parser.ts";
+import { isExpectedWireResult, parseHerdrWireResponse } from "./herdr-wire-parser.ts";
 import { encodeWireRequest, type HerdrWireParameters } from "./herdr-wire-encoder.ts";
 import { HerdrConfig, HerdrRequestDeadline, herdrConfigLayer } from "./herdr-config.ts";
 import type { HerdrAbsolutePath } from "./herdr-domain.ts";
@@ -636,14 +636,6 @@ export const herdrTransportLayer = herdrTransportLayerWithoutDependencies.pipe(
   Layer.provide(herdrConfigLayer),
 );
 
-function isExpectedWireResult<Method extends WireMethod>(
-  method: Method,
-  result: ResponseResult,
-): result is WireMethodMap[Method]["result"] {
-  const acceptedTypes: readonly string[] = wireResultTypesByMethod[method];
-  return acceptedTypes.includes(result.type);
-}
-
 function connectSocket(
   socketPath: HerdrAbsolutePath,
   operation: TransportOperation,
@@ -858,7 +850,7 @@ function isWireErrorResponse(
 function verifyProtocolCompatibility(
   result: ResponseResult,
   requestId: string,
-  supportedProtocol: 21,
+  supportedProtocol: 22,
 ): Effect.Effect<void, HerdrUnsupportedProtocol | HerdrUnsupportedResult> {
   if (result.type !== "pong") {
     return Effect.fail(new HerdrUnsupportedResult("ping", result.type, "pong", requestId));
