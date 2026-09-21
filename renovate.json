@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "platformAutomerge": false,
+  "packageRules": [
+    {
+      "description": "Update the Effect runtime and integrations together.",
+      "matchPackageNames": ["effect", "@effect/platform-*", "@effect/vitest"],
+      "groupName": "Effect",
+      "groupSlug": "effect"
+    },
+    {
+      "description": "Merge passing non-major maintenance updates.",
+      "matchUpdateTypes": ["patch", "minor", "pin", "digest"],
+      "automerge": true
+    }
+  ]
+}
