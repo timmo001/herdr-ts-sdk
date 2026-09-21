@@ -6,6 +6,6 @@
 
 The daily **Sync upstream** workflow merges upstream into `fork/main`, runs the full verification suite, then pushes. Conflicts or failed checks stop the update. It can also be run manually. Published history is never force-pushed.
 
-Renovate groups Effect runtime packages and automatically merges non-major updates after checks pass. Other updates remain available for review.
+Renovate updates only the root package's Effect runtime packages on `fork/main`, grouped together, and automatically merges non-major updates after checks pass. Other dependency updates come from upstream.
 
 Once upstream includes the migration and source exports, verify a current upstream commit in the consumers, replace the fork pins, and retire the fork automation. The repo-scoped maintenance note records the consumer list and verification state.
