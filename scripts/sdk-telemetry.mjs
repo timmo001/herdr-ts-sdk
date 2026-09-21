@@ -332,6 +332,15 @@ export const traceSdkExecution = (input, effect) =>
               const bounded = {
                 ...span,
                 _tag: "Span",
+                get traceId() {
+                  return span.traceId;
+                },
+                get spanId() {
+                  return span.spanId;
+                },
+                get attributes() {
+                  return span.attributes;
+                },
                 get status() {
                   return span.status;
                 },

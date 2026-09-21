@@ -5,7 +5,7 @@ export default defineConfig({
     dts: {
       tsgo: true,
     },
-    exports: true,
+    exports: false,
   },
   lint: {
     ignorePatterns: ["repos/**"],
@@ -19,6 +19,7 @@ export default defineConfig({
     },
   },
   fmt: {
+    tabWidth: 2,
     ignorePatterns: ["repos/**"],
   },
   test: {

@@ -1,5 +1,5 @@
 import { Duration, Effect, Option, Schema } from "effect";
-import { FastCheck } from "effect/testing";
+import { Arbitrary } from "effect/unstable/arbitrary";
 import { expect, test } from "vite-plus/test";
 import {
   AgentName,
@@ -20,21 +20,25 @@ import {
   herdrSdkLayerFromOptions,
 } from "./index.ts";
 import { HerdrInvalidInput, HerdrInvalidResponse } from "./herdr-errors.ts";
-import { runHerdrTest } from "./herdr-test-runtime.ts";
+import { assertHerdrProperty, runHerdrTest } from "./herdr-test-runtime.ts";
 import { HerdrRawTestResponse, startHerdrTestServer } from "./herdr-test-server.ts";
 import { makeHerdrSuccessResponse } from "./herdr-wire-fixtures.ts";
 
 // Fixed seeds make the invariant probes reproducible without a live Herdr session.
 test("metadata token names and counts reject invalid keys rather than dropping them", () => {
   const parse = Schema.decodeUnknownOption(HerdrMetadataTokenPatch);
-  FastCheck.assert(
-    FastCheck.property(FastCheck.string(), (key) => {
-      const patch = Object.fromEntries([[key, null]]);
-      const decoded = parse(patch);
-      expect(Option.isSome(decoded)).toBe(/^[A-Za-z0-9_-]{1,32}$/.test(key));
-      if (Option.isSome(decoded)) expect(decoded.value).toStrictEqual(patch);
-    }),
-    { seed: 2101, numRuns: 200 },
+  Effect.runSync(
+    assertHerdrProperty(
+      Arbitrary.schema(Schema.String),
+      (key) =>
+        Effect.sync(() => {
+          const patch = Object.fromEntries([[key, null]]);
+          const decoded = parse(patch);
+          expect(Option.isSome(decoded)).toBe(/^[A-Za-z0-9_-]{1,32}$/.test(key));
+          if (Option.isSome(decoded)) expect(decoded.value).toStrictEqual(patch);
+        }),
+      { seed: 2101, runs: 200 },
+    ),
   );
   for (const count of [0, 1, 16, 17]) {
     const patch = Object.fromEntries(
@@ -50,20 +54,31 @@ test("metadata token names and counts reject invalid keys rather than dropping t
 
 test("state labels accept any subset of known statuses and reject unknown names", () => {
   const statuses = ["idle", "working", "blocked", "done", "unknown"];
-  FastCheck.assert(
-    FastCheck.property(FastCheck.subarray(statuses), (selected) => {
-      const stateLabels = Object.fromEntries(selected.map((status) => [status, "Custom label"]));
-      const parsed = Schema.decodeUnknownSync(PaneMetadataReportInput)({
-        source: "fixture",
-        stateLabels,
-      });
-      expect(Option.getOrThrow(parsed.stateLabels)).toStrictEqual(stateLabels);
-      expect(Schema.encodeSync(PaneMetadataReportInput)(parsed)).toStrictEqual({
-        source: "fixture",
-        stateLabels,
-      });
-    }),
-    { seed: 2102, numRuns: 40 },
+  Effect.runSync(
+    assertHerdrProperty(
+      Arbitrary.schema(
+        Schema.Array(Schema.Boolean).check(
+          Schema.isLengthBetween(statuses.length, statuses.length),
+        ),
+      ),
+      (included) =>
+        Effect.sync(() => {
+          const selected = statuses.filter((_, index) => included[index]);
+          const stateLabels = Object.fromEntries(
+            selected.map((status) => [status, "Custom label"]),
+          );
+          const parsed = Schema.decodeUnknownSync(PaneMetadataReportInput)({
+            source: "fixture",
+            stateLabels,
+          });
+          expect(Option.getOrThrow(parsed.stateLabels)).toStrictEqual(stateLabels);
+          expect(Schema.encodeSync(PaneMetadataReportInput)(parsed)).toStrictEqual({
+            source: "fixture",
+            stateLabels,
+          });
+        }),
+      { seed: 2102, runs: 40 },
+    ),
   );
   for (const key of ["paused", "workng", "Working", "", "__proto__"]) {
     expect(
@@ -191,11 +206,15 @@ test("schema-less JSON rejects nonfinite numbers and class instances, including 
 
 test("natural-number schemas retain safe-integer bounds", () => {
   const parse = Schema.decodeUnknownOption(HerdrRevision);
-  FastCheck.assert(
-    FastCheck.property(FastCheck.double(), (value) => {
-      expect(Option.isSome(parse(value))).toBe(Number.isSafeInteger(value) && value >= 0);
-    }),
-    { seed: 2103, numRuns: 100 },
+  Effect.runSync(
+    assertHerdrProperty(
+      Arbitrary.schema(Schema.Number),
+      (value) =>
+        Effect.sync(() => {
+          expect(Option.isSome(parse(value))).toBe(Number.isSafeInteger(value) && value >= 0);
+        }),
+      { seed: 2103, runs: 100 },
+    ),
   );
   for (const value of [
     0,

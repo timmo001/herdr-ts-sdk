@@ -1,7 +1,7 @@
-import { Effect } from "effect";
-import { FastCheck } from "effect/testing";
+import { Effect, Schema } from "effect";
+import { Arbitrary } from "effect/unstable/arbitrary";
 import { expect, test } from "vite-plus/test";
-import { runHerdrTest } from "./herdr-test-runtime.ts";
+import { assertHerdrProperty, runHerdrTest } from "./herdr-test-runtime.ts";
 import {
   HerdrAbsolutePath,
   HerdrSdk,
@@ -189,66 +189,74 @@ test("pane and agent request codecs preserve null, omitted fields, false and nes
   ));
 
 test("arbitrary dictionary keys round-trip without prototype mutation or protocol-key conversion", () => {
-  FastCheck.assert(
-    FastCheck.property(
-      FastCheck.array(FastCheck.tuple(FastCheck.string({ unit: "grapheme" }), FastCheck.string())),
-      (entries) => {
-        const dictionary = { ...fixtureDictionary, ...Object.fromEntries(entries) };
-        const tokens = { ...dictionary, deletedToken: null };
-        const wire: unknown = JSON.parse(
-          encodeWireRequest("request-1", "pane.report_metadata", {
-            paneId: "pane-1",
-            source: "fixture",
-            tokens,
-            stateLabels: dictionary,
-            ttlMs: 1000,
-          }),
-        );
-        expect(wire).toStrictEqual({
-          id: "request-1",
-          method: "pane.report_metadata",
-          params: {
-            pane_id: "pane-1",
-            source: "fixture",
-            tokens,
-            state_labels: dictionary,
-            ttl_ms: 1000,
-          },
-        });
-        const envWire: unknown = JSON.parse(
-          encodeWireRequest("request-2", "workspace.create", { env: dictionary }),
-        );
-        expect(envWire).toStrictEqual({
-          id: "request-2",
-          method: "workspace.create",
-          params: { env: dictionary },
-        });
-        expect(Object.getPrototypeOf(dictionary)).toBe(Object.prototype);
-        expect(Object.hasOwn(dictionary, "__proto__")).toBe(true);
-      },
+  Effect.runSync(
+    assertHerdrProperty(
+      Arbitrary.schema(Schema.Array(Schema.Tuple([Schema.String, Schema.String]))),
+      (entries) =>
+        Effect.sync(() => {
+          const dictionary = { ...fixtureDictionary, ...Object.fromEntries(entries) };
+          const tokens = { ...dictionary, deletedToken: null };
+          const wire: unknown = JSON.parse(
+            encodeWireRequest("request-1", "pane.report_metadata", {
+              paneId: "pane-1",
+              source: "fixture",
+              tokens,
+              stateLabels: dictionary,
+              ttlMs: 1000,
+            }),
+          );
+          expect(wire).toStrictEqual({
+            id: "request-1",
+            method: "pane.report_metadata",
+            params: {
+              pane_id: "pane-1",
+              source: "fixture",
+              tokens,
+              state_labels: dictionary,
+              ttl_ms: 1000,
+            },
+          });
+          const envWire: unknown = JSON.parse(
+            encodeWireRequest("request-2", "workspace.create", { env: dictionary }),
+          );
+          expect(envWire).toStrictEqual({
+            id: "request-2",
+            method: "workspace.create",
+            params: { env: dictionary },
+          });
+          expect(Object.getPrototypeOf(dictionary)).toBe(Object.prototype);
+          expect(Object.hasOwn(dictionary, "__proto__")).toBe(true);
+        }),
+      { seed: 21, runs: 100 },
     ),
-    { seed: 21, numRuns: 100 },
   );
 });
 
 test("wire strings and sparse arrays follow native JSON serialization semantics", () => {
-  FastCheck.assert(
-    FastCheck.property(FastCheck.string({ unit: "grapheme" }), (text) => {
-      // Typed JavaScript arrays can still contain holes, which JSON must encode as null.
-      const keys = Array<string>(3);
-      keys[1] = text;
-      const params = { paneId: text, keys, omitted: undefined };
-      expect(encodeWireRequest(text, "pane.send_keys", params)).toBe(
-        `${JSON.stringify({ id: text, method: "pane.send_keys", params: { pane_id: text, keys } })}\n`,
-      );
-      const explicitUndefinedKeys = [...keys];
-      expect(
-        encodeWireRequest(text, "agent.send_keys", { target: text, keys: explicitUndefinedKeys }),
-      ).toBe(
-        `${JSON.stringify({ id: text, method: "agent.send_keys", params: { target: text, keys: explicitUndefinedKeys } })}\n`,
-      );
-    }),
-    { seed: 22, numRuns: 100 },
+  Effect.runSync(
+    assertHerdrProperty(
+      Arbitrary.schema(Schema.String),
+      (text) =>
+        Effect.sync(() => {
+          // Typed JavaScript arrays can still contain holes, which JSON must encode as null.
+          const keys = Array<string>(3);
+          keys[1] = text;
+          const params = { paneId: text, keys, omitted: undefined };
+          expect(encodeWireRequest(text, "pane.send_keys", params)).toBe(
+            `${JSON.stringify({ id: text, method: "pane.send_keys", params: { pane_id: text, keys } })}\n`,
+          );
+          const explicitUndefinedKeys = [...keys];
+          expect(
+            encodeWireRequest(text, "agent.send_keys", {
+              target: text,
+              keys: explicitUndefinedKeys,
+            }),
+          ).toBe(
+            `${JSON.stringify({ id: text, method: "agent.send_keys", params: { target: text, keys: explicitUndefinedKeys } })}\n`,
+          );
+        }),
+      { seed: 22, runs: 100 },
+    ),
   );
 });
 

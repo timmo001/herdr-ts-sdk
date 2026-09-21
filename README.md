@@ -28,14 +28,18 @@ const summary = await Effect.runPromise(program.pipe(Effect.provide(herdrSdkLaye
 
 - SDK version: `0.9.0` (unreleased baseline)
 - Minimum Herdr release: `0.9.0`; supported wire protocol: **22 only**
-- Effect: `4.0.0-beta.105`
+- Effect: `4.0.0-rc.117`
 - Runtime: Node.js 20 or newer on a platform supported by Herdr's local socket server
 
 The SDK verifies protocol compatibility before ordinary requests and shares that compatibility
 result across the Layer graph. A server on another protocol fails with
 `HerdrUnsupportedProtocol`; install matching Herdr and SDK releases instead of bypassing the check.
 
-`@herdr/sdk` is not currently published to npm. To use it today, build and pack this repository:
+Bun consumers can install a pinned Git revision without building first. Bun uses the source
+export; TypeScript uses built declarations when available and source types otherwise.
+Packed Node.js consumers use the built ESM.
+
+`@herdr/sdk` is not currently published to npm. For Node.js, build and pack this repository:
 
 ```sh
 git clone https://github.com/dmmulroy/herdr-ts-sdk.git

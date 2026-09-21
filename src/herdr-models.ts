@@ -2218,6 +2218,11 @@ export interface PaneAgentSessionReportInputEncoded extends Schema.Codec.Encoded
   typeof PaneAgentSessionReportInput
 > {}
 
+const paneStateLabels: Schema.Codec<Readonly<Partial<Record<AgentStatus, string>>>> = Schema.Record(
+  Schema.String,
+  Schema.String,
+).check(Schema.isPropertyNames(AgentStatus));
+
 /**
  * Pane presentation report with sparse known-status labels and individually patched tokens.
  * Ordinary reports replace this source's title, displayed agent name, and label table;
@@ -2232,11 +2237,7 @@ export const PaneMetadataReportInput = Schema.Struct({
   appliesToSource: Schema.OptionFromOptionalKey(Schema.String),
   title: Schema.OptionFromOptionalKey(Schema.String),
   displayAgent: Schema.OptionFromOptionalKey(Schema.String),
-  stateLabels: Schema.OptionFromOptionalKey(
-    Schema.Record(AgentStatus, Schema.optionalKey(Schema.String)).annotate({
-      parseOptions: { onExcessProperty: "error" },
-    }),
-  ),
+  stateLabels: Schema.OptionFromOptionalKey(paneStateLabels),
   tokens: Schema.OptionFromOptionalKey(HerdrMetadataTokenPatch),
   clearTitle: Schema.OptionFromOptionalKey(Schema.Boolean),
   clearDisplayAgent: Schema.OptionFromOptionalKey(Schema.Boolean),

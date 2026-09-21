@@ -2,7 +2,8 @@
  * Effect-native Vitest execution boundary for optional local development tracing.
  * @since 0.8.2
  */
-import { Console, Effect, type Scope } from "effect";
+import { Cause, Console, Effect, type Scope } from "effect";
+import { Arbitrary } from "effect/unstable/arbitrary";
 import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { TestContext } from "vite-plus/test";
@@ -12,9 +13,9 @@ const repositoryDirectory = fileURLToPath(new URL("../", import.meta.url));
 const testExecutionCounts = new WeakMap<TestContext["task"], number>();
 
 /**
- * Runs an Effect body at the Vitest/FastCheck boundary, closing its resources before trace export.
+ * Runs an Effect body at the Vitest boundary, closing its resources before trace export.
  * Explicit Vitest context keeps concurrent tests isolated; synchronous assertions outside this
- * boundary have no synthetic span. Each generated property case is a separate execution, not a retry;
+ * boundary have no synthetic span. Each call is a separate execution, not a retry;
  * only the first 32 executions per test are traced. Undefined context denotes a suite lifecycle hook.
  * @category Testing
  * @since 0.8.2
@@ -61,3 +62,29 @@ export function runHerdrTest<A, E>(
     { signal: context?.signal },
   );
 }
+
+/**
+ * Checks generated cases with Effect, retaining shrinking diagnostics and interruption.
+ * @category Testing
+ * @since 0.9.0
+ */
+export const assertHerdrProperty = Effect.fnUntraced(function* <A, E, R>(
+  arbitrary: Arbitrary.Arbitrary<A>,
+  property: (value: A) => Effect.Effect<unknown, E, R>,
+  options: Arbitrary.CheckOptions,
+) {
+  const result = yield* Arbitrary.checkEffect(
+    arbitrary,
+    (value) =>
+      Effect.suspend(() => property(value)).pipe(
+        Effect.as(true),
+        Effect.catchCause(
+          (cause): Effect.Effect<never, E | Cause.Cause<E>> =>
+            Cause.hasInterrupts(cause) ? Effect.failCause(cause) : Effect.fail(cause),
+        ),
+      ),
+    options,
+  );
+  const failure = Arbitrary.formatCheckFailure(result);
+  if (failure !== undefined) return yield* Effect.die(new Error(failure));
+});
