@@ -6,7 +6,7 @@ import { expect, test } from "vite-plus/test";
 import { runHerdrTest } from "../src/herdr-test-runtime.ts";
 
 const repositoryDirectory = fileURLToPath(new URL("../", import.meta.url));
-const agentGuides = ["AGENT.md", "AGENTS.md", "docs/agent-workflow.md"] as const;
+const agentGuides = ["AGENTS.md", "docs/agent-workflow.md"] as const;
 const parseAgentPackageScripts = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Struct({ scripts: Schema.Record(Schema.String, Schema.String) })),
 );

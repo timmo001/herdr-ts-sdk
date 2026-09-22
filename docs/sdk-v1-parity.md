@@ -165,4 +165,3 @@ wire intents are exercised by `src/herdr-protocol-22.test.ts`.
 | Event and operation-specific error inference                                                        | Public service interfaces         | `src/herdr-sdk.tst.ts`                                            | covered |
 | Effect-native public package entrypoint                                                             | `src/index.ts`                    | `src/herdr-sdk.test.ts`                                           | covered |
 | Effect-native README examples                                                                       | `README.md`                       | package build/typecheck                                           | covered |
-| Root tooling excludes read-only `repos/effect/`                                                     | project configuration             | formatting, lint, typecheck, tests, package build                 | covered |

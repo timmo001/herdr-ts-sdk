@@ -49,9 +49,9 @@ Other useful routes (commands run from the repository root):
   `.tst.ts` files for requirements and inference, which runtime Vitest does not check.
 - Boundary parsing to wire encoding: `./node_modules/.bin/vitest run src/herdr-input-boundaries.test.ts src/herdr-wire-encoder.test.ts`.
 - Resource lifetimes: `./node_modules/.bin/vitest run src/event-service.test.ts src/pane-graphics.test.ts`.
-- Exact upstream Effect behavior: find the installed version in the package manifest, then read
-  matching [vendored source](../repos/effect/) and its local guidance; never import or edit it.
-  Confirm exports/signatures against the installed package when reference revisions disagree.
+- Exact upstream Effect behavior: find the installed version in the package manifest, then inspect
+  the Effect [OpenCode reference](../opencode.json) and its agent guidance; never import or edit it.
+  Branch references may be newer. Confirm exports/signatures against the installed package.
 - Trace-driven experiments: follow [local tracing](local-tracing.md) to run a lab with `--trace`,
   query its emitted run ID, and inspect phase timing, outcome, cleanup, and linked shared work.
 
@@ -68,7 +68,7 @@ For strict no-bootstrap verification, bypass that launcher: `node scripts/sdk-do
 
 | Command                    | Evidence and limits                                                                                                                                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm run doctor`          | Reports runtime/tool/dependency/vendor/protocol alignment and an isolated socket bind/close probe; no installs, repairs, or independent upstream commit verification.                            |
+| `pnpm run doctor`          | Reports runtime/tool/dependency/protocol alignment and an isolated socket bind/close probe; no installs, repairs, or independent upstream commit verification.                                   |
 | `pnpm run verify:quick`    | Format check, lint, types (including `.tst.ts` and tooling JS), public JSDoc, and example compilation; no runtime, generation drift, or package check. `pnpm run check` is the same quick route. |
 | `pnpm run verify`          | Quick stages plus generated drift, runtime suites, and isolated package verification.                                                                                                            |
 | `pnpm run test:runtime`    | Runtime Vitest suites, including tooling tests; not a substitute for typechecking.                                                                                                               |
@@ -113,7 +113,7 @@ Send a small task that contains all of the following (inline in the agent prompt
 - **Base and checkout:** comparison commit, shared checkout or isolated worktree, current branch.
 - **Ownership:** exact writable paths; everything else is read-only unless reassigned.
 - **Interfaces:** existing public seam to use, needed peer API and its owner, integration order.
-- **Safety:** fixture-only tests, vendor read-only, no live control, installs, commits, broad fixes,
+- **Safety:** fixture-only tests, references read-only, no live control, installs, commits, broad fixes,
   generated rewrites, or tracked execution artifacts unless explicitly authorized.
 - **Verification:** focused command first, broader checks owned by the coordinator if concurrent.
 - **Delivery:** changes in the assigned checkout and the concise handoff below, not a report file.

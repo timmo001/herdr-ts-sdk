@@ -748,8 +748,9 @@ catalog.
 Start with [AGENTS.md](AGENTS.md), the [architecture](docs/architecture.md), and the
 [agent workflow](docs/agent-workflow.md) for task-to-file/test navigation, learning routes,
 verification safety, and subagent handoffs. [package.json](package.json) is the command source of
-truth. The matching Effect source in `repos/effect/` is read-only reference material; production
-code imports the installed package, never vendored source.
+truth. [OpenCode references](opencode.json) provide read-only upstream source for agents. These
+follow branches and may differ from installed dependencies; production code imports installed
+packages, never reference source.
 
 With dependencies already installed, run from the repository root:
 

@@ -6,8 +6,6 @@ import("./sdk-verification-doctor.mjs").catch((error) => {
   console.error(
     `FAIL dependencies: doctor tooling unavailable (${error.code ?? error.name}); install the locked dependencies explicitly.`,
   );
-  console.error(
-    "SKIPPED package manager, vendor alignment, protocol, local socket: tooling unavailable",
-  );
+  console.error("SKIPPED package manager, protocol, local socket: tooling unavailable");
   process.exitCode = 1;
 });

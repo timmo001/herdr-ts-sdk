@@ -1,3 +1,0 @@
-# agent-repos manifest
-# name	prefix	url	branch	squash
-effect	repos/effect	https://github.com/Effect-TS/effect.git	effect@4.0.0-beta.105	true

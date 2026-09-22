@@ -2,7 +2,7 @@
 
 ## Scope of this note
 
-This note uses only the vendored Effect 4.0.0-beta.105 repository. Public API declarations and vendored AI guidance are the primary references; implementation and tests are cited where lifecycle details need confirmation.
+This historical note uses Effect 4.0.0-beta.105 at [commit 5b6febd5f](https://github.com/Effect-TS/effect/tree/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb). Public API declarations and that revision's AI guidance are the primary references; implementation and tests are cited where lifecycle details need confirmation. Source citations below retain the former `repos/effect/` prefix and refer to that archived commit, not a local checkout.
 
 ## The ownership model
 

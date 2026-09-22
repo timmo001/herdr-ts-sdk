@@ -140,7 +140,8 @@ import { Effect, Layer, Option, Schema } from "effect";
 ```
 
 Use narrow public entrypoints for unstable modules. Confirm APIs against installed declarations;
-`repos/effect/` is read-only reference material and may represent a different revision.
+the branch-based [OpenCode references](../opencode.json) are read-only and may represent a different
+revision.
 
 ## Cohesion and complexity
 

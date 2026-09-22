@@ -8,7 +8,6 @@ export default defineConfig({
     exports: false,
   },
   lint: {
-    ignorePatterns: ["repos/**"],
     rules: {
       "typescript/no-explicit-any": "error",
       "typescript/no-non-null-assertion": "error",
@@ -20,7 +19,6 @@ export default defineConfig({
   },
   fmt: {
     tabWidth: 2,
-    ignorePatterns: ["repos/**"],
   },
   test: {
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],

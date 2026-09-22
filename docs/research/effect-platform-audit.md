@@ -3,7 +3,8 @@
 ## Scope and baseline
 
 This audit covers the Effect-native `src/` implementation, its composition graph, tests, generated
-wire boundary, and the Effect `4.0.0-beta.105` source pinned under `repos/effect`. It evaluates
+wire boundary, and the Effect `4.0.0-beta.105` source at
+[commit 5b6febd5f](https://github.com/Effect-TS/effect/tree/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb). It evaluates
 opportunities to replace project-owned infrastructure with Effect or Effect Platform primitives
 without changing Herdr's protocol, error, timeout, ordering, or resource-ownership semantics.
 
@@ -127,9 +128,9 @@ capacity, and invalidation policies that this single immutable memo does not hav
 The pinned `NodeSocket.makeNet` accepts Node `NetConnectOpts`, which includes Unix-domain
 `{ path }`, plus `openTimeout`. It registers a scope finalizer before connecting and closes or
 destroys the connection when the scope ends
-([source](../../repos/effect/packages/platform-node-shared/src/NodeSocket.ts#L45)). Its adapted
+([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/platform-node-shared/src/NodeSocket.ts#L45)). Its adapted
 socket exposes a scoped writer and removes read listeners in a finalizer
-([source](../../repos/effect/packages/platform-node-shared/src/NodeSocket.ts#L108)).
+([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/platform-node-shared/src/NodeSocket.ts#L108)).
 
 Those are real reductions in project-owned lifecycle machinery. They can replace much of
 `connectSocket`, `closeSocket`, and observer listener registration
@@ -138,16 +139,16 @@ Those are real reductions in project-owned lifecycle machinery. They can replace
 However, direct adoption currently has four semantic gaps:
 
 1. `Socket.toChannel` feeds incoming `data` events into a default `Queue.make()`
-   ([source](../../repos/effect/packages/effect/src/unstable/socket/Socket.ts#L386)). The default
+   ([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/effect/src/unstable/socket/Socket.ts#L386)). The default
    queue capacity is infinite
-   ([source](../../repos/effect/packages/effect/src/Queue.ts#L406)), so this adapter does not apply
+   ([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/effect/src/Queue.ts#L406)), so this adapter does not apply
    Node readable backpressure to a slow event consumer.
 2. handler Effects from `NodeSocket.fromDuplex` run through a `FiberSet`
-   ([source](../../repos/effect/packages/platform-node-shared/src/NodeSocket.ts#L119)). Effectful
+   ([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/platform-node-shared/src/NodeSocket.ts#L119)). Effectful
    per-chunk work can therefore overlap; Herdr framing must keep state mutation synchronous or
    serialize decoded chunks explicitly.
 3. the scoped writer's individual write callback has no cancellation finalizer
-   ([source](../../repos/effect/packages/platform-node-shared/src/NodeSocket.ts#L203)). The current
+   ([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/platform-node-shared/src/NodeSocket.ts#L203)). The current
    transport deliberately destroys a socket when a backpressured write is interrupted
    ([source](../../src/herdr-transport.ts#L489)), and the graphics timeout test depends on
    that close-on-uncertain-frame behavior.
@@ -163,17 +164,17 @@ and explicitly close the owning socket/scope on interrupted or timed-out graphic
 
 `NodeStream.fromReadable` and `fromReadableChannel` expose Node readables as pull-based Effect
 streams/channels and destroy the readable during scope finalization
-([source](../../repos/effect/packages/platform-node-shared/src/NodeStream.ts#L30)). The implementation
+([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/platform-node-shared/src/NodeStream.ts#L30)). The implementation
 uses the Node `readable` event plus `.read()` demand and removes listeners in a scope finalizer
-([source](../../repos/effect/packages/platform-node-shared/src/NodeStream.ts#L332)).
+([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/platform-node-shared/src/NodeStream.ts#L332)).
 
 That is a better match for event subscriptions than the current `Stream.callback`, which is
 documented as unbounded by default
-([source](../../repos/effect/packages/effect/src/Stream.ts#L660)). The present callback emits with
+([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/effect/src/Stream.ts#L660)). The present callback emits with
 `Queue.offerUnsafe`
 ([source](../../src/event-service.ts#L69)); simply adding a bounded `bufferSize` would not
 create backpressure because `offerUnsafe` returns `false` when a non-sliding bounded queue is full
-([source](../../repos/effect/packages/effect/src/Queue.ts#L680)). A pull-based Node adapter avoids
+([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/effect/src/Queue.ts#L680)). A pull-based Node adapter avoids
 choosing between silent event loss and unbounded memory.
 
 Recommended prototype shape:
@@ -195,9 +196,9 @@ keeping the Herdr-specific protocol state in one transport adapter.
 
 The pinned `Ndjson.decode` composes text decoding with `Channel.splitLines` and `JSON.parse`, and its
 only option is `ignoreEmptyLines`
-([source](../../repos/effect/packages/effect/src/unstable/encoding/Ndjson.ts#L154)). It has no maximum
+([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/effect/src/unstable/encoding/Ndjson.ts#L154)). It has no maximum
 line-byte option. `Channel.splitLines` also flushes a final unterminated fragment when upstream ends
-([source](../../repos/effect/packages/effect/src/Channel.ts#L6565)).
+([source](https://github.com/Effect-TS/effect/blob/5b6febd5f0ba3f941061fd3aea8a3a853ea617eb/packages/effect/src/Channel.ts#L6565)).
 
 That differs from Herdr in three important ways:
 

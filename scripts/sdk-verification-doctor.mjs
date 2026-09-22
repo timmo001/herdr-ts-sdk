@@ -28,7 +28,7 @@ const doctorSdk = Effect.gen(function* () {
   if (process.argv.length === 3 && ["--help", "-h"].includes(process.argv[2] ?? "")) {
     console.log("Doctor usage: node scripts/sdk-doctor.mjs");
     console.log(
-      "Checks package runtime, development CLI, package manager, installed dependency manifests/exact pins, read-only vendor alignment, bundled protocol metadata and isolated local socket bind/close.",
+      "Checks package runtime, development CLI, package manager, installed dependency manifests/exact pins, bundled protocol metadata and isolated local socket bind/close.",
     );
     console.log(
       "Does not connect to live Herdr, install, repair, resolve dependency ranges or independently verify the recorded upstream commit.",
@@ -131,31 +131,6 @@ const doctorSdk = Effect.gen(function* () {
     );
     checks.push(["dependency", dependency]);
   }
-  const vendor = yield* Effect.gen(function* () {
-    const manifestText = yield* fs.readFileString(join(directory, ".agent-repos"));
-    const entry = manifestText
-      .split(/\r?\n/)
-      .map((line) => line.split(/\s+/))
-      .find(([name]) => name === "effect");
-    if (!entry || !entry[1] || !entry[3])
-      return { status: "fail", detail: "Effect entry missing from .agent-repos" };
-    const version = yield* parseDoctorVersion(
-      yield* fs.readFileString(join(directory, entry[1], "packages/effect/package.json")),
-    );
-    const expectedTag = `effect@${manifest.dependencies.effect}`;
-    return {
-      status:
-        entry[3] === expectedTag && version.version === manifest.dependencies.effect
-          ? "pass"
-          : "fail",
-      detail: `.agent-repos ${entry[3]}; vendor ${version.version}; dependency ${manifest.dependencies.effect} (read-only reference)`,
-    };
-  }).pipe(
-    Effect.catch((error) =>
-      Effect.succeed({ status: "fail", detail: `Vendor alignment unavailable (${error._tag})` }),
-    ),
-  );
-  checks.push(["vendor alignment", vendor]);
   checks.push(["protocol", yield* checkVerificationProtocol(directory)]);
   const socket = yield* Effect.gen(function* () {
     const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "hsd-" });

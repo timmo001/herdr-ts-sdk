@@ -26,9 +26,10 @@ constructor exports; do not turn a focused change into an API migration. Read
   Do not retain parallel legacy Promise workflows or compatibility wrappers.
   Pure synchronous calculations should remain pure.
 - Search existing owners before adding helpers; use domain-searchable names and attached JSDoc.
-- Import installed packages, never vendored source. [repos/effect](repos/effect/) is read-only:
-  inspect its own guidance and matching source/tests before guessing an Effect API. Installed
-  exports/declarations are authoritative when vendored examples target a different API revision.
+- Import installed packages, never agent reference source. [OpenCode references](opencode.json)
+  provide read-only upstream repositories: inspect their guidance and matching source/tests before
+  guessing an API. Installed exports/declarations and the bundled protocol schema are authoritative
+  when branch references target a different revision.
 - Tests use isolated local fixtures through public SDK/service interfaces, never ambient
   sessions, personal panes, or a developer's socket.
 - For opt-in fixture/test/verification traces, follow [local tracing](docs/local-tracing.md).

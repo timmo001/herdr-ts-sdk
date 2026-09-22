@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "references": {
+    "effect": {
+      "repository": "Effect-TS/effect",
+      "branch": "main",
+      "description": "Use for Effect 4 APIs, Schema, services, Layers, resource lifetimes, Node platform adapters and tests. Read its agent guidance and compare branch source with the installed package declarations before using an API."
+    },
+    "herdr": {
+      "repository": "herdrdev/herdr",
+      "branch": "master",
+      "description": "Use for Herdr socket dispatch, protocol schemas, client-shell binary codecs, events and terminal resource behaviour. Check the SDK's recorded upstream commit and bundled schema when the branch has newer protocol changes."
+    },
+    "herdr-sdk-upstream": {
+      "repository": "dmmulroy/herdr-ts-sdk",
+      "branch": "main",
+      "description": "Use for upstream SDK changes, public API conventions, lifecycle tests and compatibility when maintaining this fork or preparing an upstream contribution."
+    },
+    "vite-plus": {
+      "repository": "voidzero-dev/vite-plus",
+      "branch": "main",
+      "description": "Use for Vite Plus configuration, bundled Oxlint and Oxfmt, Vitest, packaging and toolchain upgrades. Preserve the installed bundle's dependency contract and verify branch examples against its installed exports."
+    }
+  }
+}
