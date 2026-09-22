@@ -111,13 +111,15 @@ type CamelCaseWireValue<Value> = Value extends string | number | boolean | null 
     ? readonly CamelCaseWireValue<Item>[]
     : Value extends object
       ? {
-          readonly [Key in keyof Value as string extends Key
-            ? unknown extends Value[Key]
-              ? never
-              : Key
-            : Key extends string
-              ? CamelCaseWireKey<Key>
-              : Key]: Key extends "env" | "tokens" | "state_labels"
+          readonly [
+            Key in keyof Value as string extends Key
+              ? unknown extends Value[Key]
+                ? never
+                : Key
+              : Key extends string
+                ? CamelCaseWireKey<Key>
+                : Key
+          ]: Key extends "env" | "tokens" | "state_labels"
             ? Value[Key]
             : CamelCaseWireValue<Value[Key]>;
         }

@@ -78,9 +78,8 @@ export const assertHerdrProperty = Effect.fnUntraced(function* <A, E, R>(
     (value) =>
       Effect.suspend(() => property(value)).pipe(
         Effect.as(true),
-        Effect.catchCause(
-          (cause): Effect.Effect<never, E | Cause.Cause<E>> =>
-            Cause.hasInterrupts(cause) ? Effect.failCause(cause) : Effect.fail(cause),
+        Effect.catchCause((cause): Effect.Effect<never, E | Cause.Cause<E>> =>
+          Cause.hasInterrupts(cause) ? Effect.failCause(cause) : Effect.fail(cause),
         ),
       ),
     options,
