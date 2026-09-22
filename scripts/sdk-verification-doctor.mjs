@@ -82,12 +82,19 @@ const doctorSdk = Effect.gen(function* () {
       detail: `vite-plus declares Node ${toolingEngines}; direct CLI probe ${toolingProbe.detail} (separate from package runtime floor)`,
     },
   ]);
-  const manager = yield* runVerificationCommand("pnpm", ["--version"], {
-    cwd: directory,
-    capture: true,
-    timeout: 10_000,
-    shell: process.platform === "win32",
-  });
+  // Keep the caller's selected manager when subprocess version switching is disabled.
+  const managerPath = process.env.npm_execpath ?? "pnpm";
+  const managerIsJavaScript = /\.[cm]?js$/i.test(managerPath);
+  const manager = yield* runVerificationCommand(
+    managerIsJavaScript ? process.execPath : managerPath,
+    managerIsJavaScript ? [managerPath, "--version"] : ["--version"],
+    {
+      cwd: directory,
+      capture: true,
+      timeout: 10_000,
+      shell: process.platform === "win32" && !managerIsJavaScript,
+    },
+  );
   const managerVersion = manager.output.trim();
   checks.push([
     "package manager",
@@ -98,7 +105,7 @@ const doctorSdk = Effect.gen(function* () {
           : "fail",
       detail:
         manager.status === "pass"
-          ? `pnpm ${managerVersion}; expected ${manifest.devEngines.packageManager.version}`
+          ? `pnpm ${managerVersion}; expected ${manifest.devEngines.packageManager.version} (${process.env.npm_execpath ? "invoking package manager" : "PATH; run pnpm run doctor to use the project-selected manager"})`
           : `pnpm unavailable (${manager.detail}); no installation attempted`,
     },
   ]);

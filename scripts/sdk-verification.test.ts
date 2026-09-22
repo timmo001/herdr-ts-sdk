@@ -304,6 +304,56 @@ describe("verification CLI", () => {
     25_000,
   );
 
+  it.for([
+    { kind: "script", version: "11.0.0", expected: "PASS" },
+    { kind: "native", version: process.version, expected: "PASS" },
+    { kind: "mismatched", version: "10.0.0", expected: "FAIL" },
+    { kind: "missing", version: "11.0.0", expected: "FAIL" },
+  ] as const)("probes the selected $kind package manager without bootstrapping", (input, context) =>
+    runVerificationTest(
+      context,
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* makeVerificationFixture();
+        const expectedVersion = input.kind === "native" ? process.version : "11.0.0";
+        yield* fs.writeFileString(
+          join(directory, "package.json"),
+          JSON.stringify({
+            engines: { node: ">=20" },
+            devEngines: { packageManager: { name: "pnpm", version: expectedVersion } },
+            dependencies: {},
+            devDependencies: {},
+          }),
+        );
+        const managerPath =
+          input.kind === "native" ? process.execPath : join(directory, "selected manager.mjs");
+        if (input.kind !== "native" && input.kind !== "missing") {
+          yield* fs.writeFileString(
+            managerPath,
+            `if (process.argv[2] !== "--version" ||
+                process.env.COREPACK_ENABLE_NETWORK !== "0" ||
+                process.env.COREPACK_ENABLE_AUTO_PIN !== "0" ||
+                process.env.npm_config_manage_package_manager_versions !== "false") {
+              process.exit(9);
+            }
+            console.log(${JSON.stringify(input.version)});
+            `,
+          );
+        }
+        const result = yield* runVerificationCommand(
+          process.execPath,
+          [join(directory, "scripts/sdk-doctor.mjs")],
+          { cwd: directory, capture: true, env: { npm_execpath: managerPath } },
+        );
+        expect(result.output).toContain(
+          input.kind === "missing"
+            ? "FAIL package manager: pnpm unavailable"
+            : `${input.expected} package manager: pnpm ${input.version}; expected ${expectedVersion} (invoking package manager)`,
+        );
+      }),
+    ),
+  );
+
   it("reports unavailable tooling rather than installing dependencies", (context) =>
     runVerificationTest(
       context,
